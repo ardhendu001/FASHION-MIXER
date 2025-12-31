@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { FashionConcept, SearchResult } from "../types";
 import { fileToBase64 } from "../utils/fileHelpers";
@@ -46,7 +45,6 @@ export const generateFashionConcept = async (
   silhouette: File,
   color: File
 ): Promise<FashionConcept> => {
-  
   const [texB64, silB64, colB64] = await Promise.all([
     fileToBase64(texture),
     fileToBase64(silhouette),
@@ -62,7 +60,7 @@ export const generateFashionConcept = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-pro-preview",
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -86,6 +84,53 @@ export const generateFashionConcept = async (
   } catch (error) {
     console.error("Gemini API Error (Concept):", error);
     throw error;
+  }
+};
+
+/**
+ * Uses gemini-2.5-flash-image to generate or edit images with multiple references.
+ */
+export const aiCreativeGeneration = async (prompt: string, imageFiles: File[]): Promise<string | null> => {
+  try {
+    const parts: any[] = [];
+    
+    // Add text prompt
+    parts.push({ 
+      text: `Generate an ultra-high-end avant-garde fashion design. 
+             Directive: ${prompt}. 
+             Instruction: Synthesize the design DNA from all attached reference images, 
+             blending their textures, silhouettes, and color schemes into a singular masterpiece.` 
+    });
+
+    // Add multiple image references
+    if (imageFiles.length > 0) {
+      const b64Promises = imageFiles.map(file => fileToBase64(file));
+      const b64s = await Promise.all(b64Promises);
+      
+      b64s.forEach((data, index) => {
+        parts.push({
+          inlineData: {
+            mimeType: imageFiles[index].type,
+            data: data,
+          },
+        });
+      });
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: { parts },
+    });
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return part.inlineData.data;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("AI Creative Generation Error:", error);
+    return null;
   }
 };
 
@@ -116,7 +161,8 @@ export const generateMoodBoard = async (themeName: string): Promise<string[]> =>
   const prompts = [
     `Abstract artistic texture pattern representing the ${themeName} aesthetic, high quality wallpaper, 8k resolution`,
     `Futuristic architectural geometry inspired by ${themeName}, cinematic lighting, macro detail`,
-    `Fluid color gradient and light leak overlay in the style of ${themeName}, ethereal mood`
+    `Fluid color gradient and light leak overlay in the style of ${themeName}, ethereal mood`,
+    `Macro close up of a luxury fabric or material inspired by ${themeName}, high contrast cinematic photography`
   ];
 
   try {
@@ -131,11 +177,8 @@ export const generateMoodBoard = async (themeName: string): Promise<string[]> =>
 
 export const findShoppingSuggestions = async (conceptName: string, tags: string[]): Promise<SearchResult[]> => {
   try {
-    // Construct a search query
-    const query = `buy avant-garde fashion ${conceptName} ${tags.slice(0, 3).join(" ")} dress or outfit`;
-    
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-pro-preview",
       contents: `Find 4 real, distinct, purchasable high-fashion items that match this style: "${conceptName}". Return a list of products.`,
       config: {
         tools: [{ googleSearch: {} }],
@@ -154,7 +197,6 @@ export const findShoppingSuggestions = async (conceptName: string, tags: string[
       }
     });
 
-    // Deduplicate by URL
     const uniqueResults = Array.from(new Map(results.map(item => [item.url, item])).values());
     return uniqueResults.slice(0, 4);
 

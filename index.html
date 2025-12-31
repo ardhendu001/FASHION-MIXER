@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,13 +11,98 @@
       body {
         font-family: 'Inter', sans-serif;
         transition: background-color 1s ease, color 0.5s ease;
+        overflow-x: hidden;
+        background-color: #05050a;
       }
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+      
+      /* Cinematic Cyberpunk Grain */
+      .bg-noise {
+        position: fixed;
+        inset: -200%;
+        z-index: 50;
+        opacity: 0.05;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        animation: 
+          noise-shift 0.2s steps(2) infinite,
+          bg-pulse 20s ease-in-out infinite alternate,
+          bg-drift 180s linear infinite;
       }
-      .animate-fade-in-up {
-        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+      @keyframes noise-shift {
+        0% { transform: translate(0,0); }
+        25% { transform: translate(-0.2%,-0.2%); }
+        50% { transform: translate(-0.4%,0.2%); }
+        75% { transform: translate(0.2%,-0.4%); }
+        100% { transform: translate(0,0); }
+      }
+
+      @keyframes bg-pulse {
+        0% { opacity: 0.03; filter: brightness(1); }
+        50% { opacity: 0.07; filter: brightness(1.2); }
+        100% { opacity: 0.04; filter: brightness(0.9); }
+      }
+
+      @keyframes bg-drift {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 1000px 1000px; }
+      }
+
+      /* Holographic Shard Effect */
+      .holographic-shard {
+        position: absolute;
+        background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+        backdrop-filter: blur(4px);
+        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      @keyframes float-shard {
+        0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+        33% { transform: translate(30px, -50px) rotate(10deg) scale(1.05); }
+        66% { transform: translate(-20px, 40px) rotate(-5deg) scale(0.95); }
+      }
+
+      .animate-float-shard {
+        animation: float-shard 25s ease-in-out infinite;
+      }
+
+      .blueprint-grid {
+        background-image: 
+          linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 0, 255, 0.05) 1px, transparent 1px);
+        background-size: 100px 100px;
+      }
+
+      .blueprint-subgrid {
+        background-image: 
+          linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+
+      /* Shimmering luminous edges */
+      @keyframes shimmer-border {
+        0% { border-color: rgba(0, 255, 255, 0.1); box-shadow: 0 0 15px rgba(0, 255, 255, 0.05); }
+        50% { border-color: rgba(255, 0, 255, 0.3); box-shadow: 0 0 30px rgba(255, 0, 255, 0.15); }
+        100% { border-color: rgba(0, 255, 255, 0.1); box-shadow: 0 0 15px rgba(0, 255, 255, 0.05); }
+      }
+
+      .luminous-container {
+        animation: shimmer-border 8s infinite ease-in-out;
+      }
+
+      @keyframes scanline {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+      }
+      .scanline {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 6px;
+        background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.03), transparent);
+        z-index: 40;
+        pointer-events: none;
+        animation: scanline 15s linear infinite;
       }
     </style>
   <script type="importmap">
@@ -31,6 +117,8 @@
 </script>
 </head>
   <body>
+    <div class="bg-noise"></div>
+    <div class="scanline"></div>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
